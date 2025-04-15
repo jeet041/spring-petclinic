@@ -61,6 +61,10 @@ class VetController {
 		return addPaginationModel(page, paginated, model);
 	}
 
+	
+	
+	
+	
 	private String addPaginationModel(int page, Page<Vet> paginated, Model model) {
 		List<Vet> listVets = paginated.getContent();
 		model.addAttribute("currentPage", page);
