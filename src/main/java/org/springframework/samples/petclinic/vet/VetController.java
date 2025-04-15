@@ -61,6 +61,27 @@ class VetController {
 		return addPaginationModel(page, paginated, model);
 	}
 
+	private <T> String addPaginationAndSortingModel(
+        int page,
+        Page<T> paginated,
+        String sortField,
+        String sortDir,
+        Model model,
+        String viewName) {
+
+    List<T> listItems = paginated.getContent();
+    model.addAttribute("currentPage", page);
+    model.addAttribute("totalPages", paginated.getTotalPages());
+    model.addAttribute("totalItems", paginated.getTotalElements());
+    model.addAttribute("listItems", listItems);
+
+    model.addAttribute("sortField", sortField);
+    model.addAttribute("sortDir", sortDir);
+    model.addAttribute("reverseSortDir", sortDir.equals("asc") ? "desc" : "asc");
+
+    return viewName;
+}
+
 	private String addPaginationModel(int page, Page<Vet> paginated, Model model) {
 		List<Vet> listVets = paginated.getContent();
 		model.addAttribute("currentPage", page);
