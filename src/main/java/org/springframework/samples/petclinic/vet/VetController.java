@@ -81,6 +81,7 @@ class VetController {
 
     return viewName;
 }
+	
 
 	private String addPaginationModel(int page, Page<Vet> paginated, Model model) {
 		List<Vet> listVets = paginated.getContent();
