@@ -51,6 +51,7 @@ class VetController {
 		return addPaginationModel(page, paginated, model);
 	}
 
+<<<<<<< HEAD
 	@PostMapping("/sets.html")
 	public String showVetList(@RequestParam(defaultValue = "1") int page, Model model) {
 		// Here we are returning an object of type 'Vets' rather than a collection of Vet
@@ -84,6 +85,14 @@ class VetController {
 
 	
 
+=======
+
+
+
+
+
+	
+>>>>>>> main
 	private String addPaginationModel(int page, Page<Vet> paginated, Model model) {
 		List<Vet> listVets = paginated.getContent();
 		model.addAttribute("currentPage", page);

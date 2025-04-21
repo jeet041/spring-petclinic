@@ -1,0 +1,99 @@
+name: AI Merge Conflict Resolver
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  dispatch:
+    if: |
+      github.event.issue.pull_request &&
+      startsWith(github.event.comment.body, '/run-ai')
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+      
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0  # Needed for merge-base
+
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+      # - name: Detect Merge Conflicts
+      #   id: detect_conflicts
+      #   run: |
+      #     git fetch origin ${{ github.base_ref }}
+      #     git merge --no-commit --no-ff origin/${{ github.base_ref }} || true
+      #     git diff --name-only --diff-filter=U > conflict_files.txt
+      #     CONFLICT_FILES=$(cat conflict_files.txt | xargs)
+      #     echo "conflict_files=$CONFLICT_FILES" >> "$GITHUB_OUTPUT"
+
+      # - name: Exit if no conflicts
+      #   if: steps.detect_conflicts.outputs.conflict_files == ''
+      #   run: echo "No merge conflicts detected. Skipping AI resolution."
+
+      - name: Resolve conflicts with AI (Bedrock)
+        # if: steps.detect_conflicts.outputs.conflict_files != ''
+        id: ai_resolve
+        run: |
+          # files="${{ steps.detect_conflicts.outputs.conflict_files }}"
+          # result_json="{}"
+
+          # for file in $files; do
+          #   conflict_content=$(cat "$file")
+
+               # Send to Bedrock API via curl
+              response=$(curl -s -X POST https://5xwi3ji63jx6n2c46rn6l7olky0himwz.lambda-url.us-east-1.on.aws \
+                      -H 'Content-Type: application/json' \
+                      -d "$(jq -n \
+                        --arg repo "${{ github.repository }}" \
+                        --arg owner "${{ github.repository_owner }}" \
+                        --arg repo_name "${{ github.event.repository.name }}" \
+                        --arg file_path "$file" \
+                        --arg conflict_content "$conflict_content" \
+                        --arg pr_number "${{ github.event.pull_request.number }}" \
+                        '{
+                          repo: $repo,
+                          owner: $owner,
+                          repo_name: $repo_name,
+                          file_path: $file_path,
+                          conflict_content: $conflict_content,
+                          pr_number: $pr_number
+                        }')"
+                    )
+
+            echo "$response" > response.json
+
+            resolved_content=$(jq -r '.resolved_file_content' response.json)
+            confidence_score=$(jq -r '.confidence_score' response.json)
+
+            echo "$resolved_content" > "$file"
+            git add "$file"
+
+            echo "::set-output name=confidence_score::$confidence_score"
+            echo "::set-output name=resolved_file::$file"
+          done
+
+      - name: Commit and Push Resolved Files
+        # if: steps.detect_conflicts.outputs.conflict_files != ''
+        run: |
+          git commit -m "Auto-resolved merge conflicts using AI 🤖"
+          git push origin HEAD:${{ github.head_ref }}
+
+      - name: Comment on PR with Confidence Score
+        # if: steps.detect_conflicts.outputs.conflict_files != ''
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ✅ Conflicts in `${{ steps.ai_resolve.outputs.resolved_file }}` were resolved using AI.
+            **Confidence Score:** `${{ steps.ai_resolve.outputs.confidence_score }}`
