@@ -23,7 +23,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -52,37 +51,12 @@ class VetController {
 		return addPaginationModel(page, paginated, model);
 	}
 
-	@PostMapping("/sets.html")
-	public String showVetList(@RequestParam(defaultValue = "1") int page, Model model) {
-		// Here we are returning an object of type 'Vets' rather than a collection of Vet
-		// objects so it is simpler for Object-Xml mapping
-		Vets vets = new Vets();
-		Page<Vet> paginated = findPaginated(page);
-		vets.getVetList().addAll(paginated.toList());
-		return addPaginationModel(page, paginated, model);
-	}
 
-	private <T> String addPaginationAndSortingModel(
-        int page,
-        Page<T> paginated,
-        String sortField,
-        String sortDir,
-        Model model,
-        String viewName) {
 
-    List<T> listItems = paginated.getContent();
-    model.addAttribute("currentPage", page);
-    model.addAttribute("totalPages", paginated.getTotalPages());
-    model.addAttribute("totalItems", paginated.getTotalElements());
-    model.addAttribute("listItems", listItems);
 
-    model.addAttribute("sortField", sortField);
-    model.addAttribute("sortDir", sortDir);
-    model.addAttribute("reverseSortDir", sortDir.equals("asc") ? "desc" : "asc");
 
-    return viewName;
-}
 
+	
 	private String addPaginationModel(int page, Page<Vet> paginated, Model model) {
 		List<Vet> listVets = paginated.getContent();
 		model.addAttribute("currentPage", page);
@@ -108,5 +82,3 @@ class VetController {
 	}
 
 }
-
-// Confidence Score: 95%
